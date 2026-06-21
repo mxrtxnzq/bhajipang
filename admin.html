@@ -3,51 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bhaji Pang Admin | จัดการเมนู</title>
+    <title>Bhaji Pang Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { background-color: #FDFBF7; color: #2D4F3B; }
-        .bg-green-deep { background-color: #2D4F3B; }
+        body { background-color: #fdfbf7; color: #2c3d2f; font-family: sans-serif; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 max-w-md mx-auto pb-20">
 
-    <div class="max-w-md mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">จัดการเมนูอาหาร</h1>
-            <a href="index.html" class="text-sm underline opacity-60">กลับหน้าหลัก</a>
+    <h1 class="text-2xl font-bold mb-6 text-center">จัดการร้านบาจีปัง</h1>
+
+    <!-- หมวดหมู่ -->
+    <div class="mb-6">
+        <div id="tabs" class="flex overflow-x-auto gap-3 pb-2 scrollbar-hide items-center">
+            <button onclick="toggleCatInput()" class="flex-shrink-0 w-10 h-10 bg-[#2c3d2f] text-white rounded-full font-bold">+</button>
+            <div id="cat-list" class="flex gap-3"></div>
         </div>
         
-        <!-- Form -->
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-green-900/5 mb-8">
-            <h2 class="font-bold mb-4">เพิ่มเมนูใหม่</h2>
-            <div class="space-y-3">
-                <input type="text" id="name" placeholder="ชื่อเมนู" class="w-full p-3 border rounded-xl bg-[#FDFBF7]">
-                <select id="category" class="w-full p-3 border rounded-xl bg-[#FDFBF7]">
-                    <option value="แนะนำ">แนะนำ</option>
-                    <option value="ทานเล่น">ทานเล่น</option>
-                    <option value="อาหารจานหลัก">อาหารจานหลัก</option>
-                    <option value="เมนูเส้น">เมนูเส้น</option>
-                    <option value="เครื่องดื่ม">เครื่องดื่ม</option>
-                    <option value="ขนมปัง">ขนมปัง</option>
-                </select>
-                <input type="number" id="price" placeholder="ราคา (บาท)" class="w-full p-3 border rounded-xl bg-[#FDFBF7]">
-                <input type="text" id="imageUrl" placeholder="URL รูปภาพ (ถ้ามี)" class="w-full p-3 border rounded-xl bg-[#FDFBF7]">
-                <button onclick="saveItem()" class="w-full bg-[#2D4F3B] text-white py-3 rounded-xl font-bold shadow-lg shadow-green-900/20 active:scale-95 transition-transform">บันทึกเมนู</button>
-            </div>
-        </div>
-
-        <h2 class="font-bold mb-4">รายการเมนูทั้งหมด</h2>
-        <div id="admin-list" class="space-y-3">
-            <!-- Items loaded via JS -->
+        <!-- ช่องเพิ่มหมวดหมู่ -->
+        <div id="cat-input-box" class="hidden bg-white p-4 rounded-2xl shadow-sm border mt-4">
+            <input type="text" id="newCatName" placeholder="ชื่อหมวดหมู่ (เช่น เครื่องดื่ม)" class="w-full p-2 border rounded-lg mb-2">
+            <input type="text" id="newCatIcon" placeholder="ไอคอน (เช่น coffee)" class="w-full p-2 border rounded-lg mb-2">
+            <button onclick="saveCategory()" class="w-full bg-[#2c3d2f] text-white py-2 rounded-lg font-bold">บันทึกหมวดหมู่</button>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    <!-- เมนู Form -->
+    <div class="bg-white p-6 rounded-3xl shadow-sm border mb-8">
+        <h2 class="font-bold mb-4">เพิ่ม/แก้ไขเมนู</h2>
+        <div class="space-y-3">
+            <select id="selCategory" class="w-full p-3 border rounded-xl bg-stone-50"></select>
+            <input type="text" id="name" placeholder="ชื่อเมนู" class="w-full p-3 border rounded-xl">
+            <input type="number" id="price" placeholder="ราคา" class="w-full p-3 border rounded-xl">
+            <input type="text" id="imageUrl" placeholder="URL รูปภาพ" class="w-full p-3 border rounded-xl">
+            <textarea id="desc" placeholder="รายละเอียดเมนู" class="w-full p-3 border rounded-xl"></textarea>
+            
+            <div class="grid grid-cols-2 gap-2 text-sm">
+                <label class="flex items-center gap-2"><input type="checkbox" id="allowSweetness"> รองรับระดับความหวาน</label>
+                <label class="flex items-center gap-2"><input type="checkbox" id="allowNote"> เปิดให้ใส่โน้ตพิเศษ</label>
+            </div>
 
+            <button onclick="saveMenu()" class="w-full bg-[#2c3d2f] text-white p-3 rounded-xl font-bold">บันทึกเมนู</button>
+        </div>
+    </div>
+
+    <!-- รายการเมนู -->
+    <div id="menu-list" class="space-y-3"></div>
+
+    <script type="module">
+        // Firebase Config ของคุณ
         const firebaseConfig = {
             apiKey: "AIzaSyD7w2MAQN9LRWivD8B7h0zPyqZhIyGFYJk",
             authDomain: "bhajipang-366db.firebaseapp.com",
@@ -57,53 +63,65 @@
             appId: "1:799553816032:web:12158ffda4f5826b3e1785",
             measurementId: "G-P2EXTMKD1Y"
         };
-        
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, setDoc, doc, onSnapshot, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const auth = getAuth(app);
         const appId = 'bhajipang-366db';
-        const menuRef = collection(db, 'artifacts', appId, 'public', 'data', 'menu');
 
-        // CRUD Operations
-        window.saveItem = async () => {
-            const name = document.getElementById('name').value;
-            const category = document.getElementById('category').value;
-            const price = document.getElementById('price').value;
-            const imageUrl = document.getElementById('imageUrl').value;
+        let categories = [{name: 'Recommend', icon: 'thumbs-up'}, {name: 'Drinks', icon: 'coffee'}];
+        let menuItems = [];
+        let currentCat = 'Recommend';
 
-            if(!name || !price) return alert("กรุณากรอกชื่อและราคาให้ครบครับ");
-
-            await addDoc(menuRef, { name, category, price: Number(price), imageUrl });
-            alert("บันทึกสำเร็จ!");
-            document.getElementById('name').value = '';
-            document.getElementById('price').value = '';
-        };
-
-        window.deleteItem = async (id) => {
-            if(confirm('คุณต้องการลบเมนูนี้ใช่หรือไม่?')) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu', id));
-            }
-        };
-
-        // Listen for updates
-        signInAnonymously(auth).then(() => {
-            onSnapshot(menuRef, (snapshot) => {
-                const list = document.getElementById('admin-list');
-                list.innerHTML = '';
-                snapshot.docs.forEach(d => {
-                    const data = d.data();
-                    list.innerHTML += `
-                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-green-900/5 flex justify-between items-center">
-                            <div>
-                                <h4 class="font-bold text-[#2D4F3B]">${data.name}</h4>
-                                <p class="text-xs opacity-60">${data.category} | ${data.price} ฿</p>
-                            </div>
-                            <button onclick="deleteItem('${d.id}')" class="text-red-500 font-bold px-3 py-1 rounded-lg">ลบ</button>
-                        </div>
-                    `;
-                });
-            });
+        // โหลดข้อมูล Real-time
+        onSnapshot(collection(db, 'menu'), (snap) => {
+            menuItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            render();
         });
+
+        window.toggleCatInput = () => document.getElementById('cat-input-box').classList.toggle('hidden');
+
+        window.saveCategory = () => {
+            const name = document.getElementById('newCatName').value;
+            const icon = document.getElementById('newCatIcon').value;
+            categories.push({ name, icon });
+            render();
+            toggleCatInput();
+        };
+
+        window.saveMenu = async () => {
+            const data = {
+                name: document.getElementById('name').value,
+                price: document.getElementById('price').value,
+                imageUrl: document.getElementById('imageUrl').value,
+                category: document.getElementById('selCategory').value,
+                allowSweetness: document.getElementById('allowSweetness').checked,
+                allowNote: document.getElementById('allowNote').checked
+            };
+            await addDoc(collection(db, 'menu'), data);
+            alert("บันทึกเมนูสำเร็จ");
+        };
+
+        window.render = () => {
+            document.getElementById('cat-list').innerHTML = categories.map(c => 
+                `<button onclick="currentCat='${c.name}'; render()" class="px-4 py-2 rounded-xl bg-white border ${currentCat === c.name ? 'border-[#2c3d2f] bg-stone-100' : ''}">${c.name}</button>`
+            ).join('');
+
+            document.getElementById('selCategory').innerHTML = categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+
+            document.getElementById('menu-list').innerHTML = menuItems.filter(i => i.category === currentCat).map(item => `
+                <div class="bg-white p-4 rounded-xl flex justify-between items-center border">
+                    <div><p class="font-bold">${item.name}</p><p class="text-xs">${item.price} ฿</p></div>
+                    <button onclick="deleteDoc(doc(db, 'menu', '${item.id}'))" class="text-red-500 font-bold text-sm">ลบ</button>
+                </div>
+            `).join('');
+            
+            lucide.createIcons();
+        };
+
+        render();
     </script>
 </body>
 </html>
