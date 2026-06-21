@@ -1,319 +1,109 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bhajipang Admin Management</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
-    body { font-family: 'Prompt', sans-serif; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhaji Pang Admin | จัดการเมนู</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #FDFBF7; color: #2D4F3B; }
+        .bg-green-deep { background-color: #2D4F3B; }
+    </style>
 </head>
-<!-- ใช้สีพื้นหลังโทนครีม (Cream) เพื่อความสบายตาเหมือนในภาพ -->
-<body class="bg-[#FBF7F0] text-slate-800 pb-20">
+<body class="p-4">
 
-  <!-- Header สีเขียวเข้มของแบรนด์ -->
-  <header class="bg-[#2D4537] text-white p-5 shadow-md sticky top-0 z-10">
-    <h1 class="text-lg font-semibold text-center tracking-wide">จัดการเมนู บาจี่ปัง</h1>
-  </header>
-
-  <main class="p-4 max-w-md mx-auto mt-2">
-    <!-- Form Section -->
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-8">
-      <h2 class="font-semibold text-[#2D4537] mb-5 border-b border-gray-100 pb-3 flex items-center gap-2">
-        เพิ่มเมนูใหม่
-      </h2>
-      
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-1.5 text-gray-600">ชื่อเมนู</label>
-          <input type="text" id="menuTh" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4537] transition-all bg-gray-50 focus:bg-white" placeholder="เช่น ปังนึ่งสังขยา">
+    <div class="max-w-md mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">จัดการเมนูอาหาร</h1>
+            <a href="index.html" class="text-sm underline opacity-60">กลับหน้าหลัก</a>
         </div>
         
-        <div>
-          <label class="block text-sm font-medium mb-1.5 text-gray-600">หมวดหมู่</label>
-          <select id="menuCategory" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4537] bg-gray-50 focus:bg-white transition-all">
-            <option value="5">ทานเล่น</option>
-            <option value="6">เมนูหลัก</option>
-            <option value="3">เครื่องดื่ม</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-1.5 text-gray-600">ราคา (บาท)</label>
-          <input type="number" id="menuPrice" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4537] bg-gray-50 focus:bg-white transition-all" placeholder="0">
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-1.5 text-gray-600">รูปภาพเมนู</label>
-          <input type="file" id="menuImage" accept="image/*" class="w-full text-sm border border-gray-200 rounded-xl p-2 bg-gray-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#2D4537] file:text-white hover:file:bg-[#1a2e23] transition-all cursor-pointer">
-        </div>
-
-        <button onclick="addMenuItem()" class="w-full bg-[#E6A864] text-white font-semibold py-3.5 rounded-xl mt-6 shadow-md hover:bg-[#d6964f] transition-colors flex justify-center items-center gap-2">
-          บันทึกเมนูใหม่
-        </button>
-      </div>
-    </div>
-
-    <!-- List Section -->
-    <h2 class="font-semibold text-[#2D4537] mb-4 px-2">เมนูในระบบ</h2>
-    <div id="menuList" class="space-y-3">
-      <p class="text-sm text-gray-400 text-center py-8">กำลังโหลดข้อมูล...</p>
-    </div>
-  </main>
-
-  <script type="module">
-    const firebaseConfig = {
-      apiKey: "AIzaSyD7w2MAQN9LRWivD8B7h0zPyqZhIyGFYJk",
-      authDomain: "bhajipang-366db.firebaseapp.com",
-      projectId: "bhajipang-366db",
-      storageBucket: "bhajipang-366db.firebasestorage.app",
-      messagingSenderId: "799553816032",
-      appId: "1:799553816032:web:12158ffda4f5826b3e1785",
-      measurementId: "G-P2EXTMKD1Y"
-    };
-
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-
-    window.addMenuItem = async function() {
-      const th = document.getElementById('menuTh').value;
-      const price = Number(document.getElementById('menuPrice').value);
-      const category = Number(document.getElementById('menuCategory').value);
-      const fileInput = document.getElementById('menuImage');
-      
-      if(!th || !price) { alert("กรุณาใส่ชื่อเมนูและราคาให้ครบ"); return; }
-      
-      let imageUrl = "";
-      if(fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const storageRef = ref(storage, `menu_images/${Date.now()}_${file.name}`);
-        await uploadBytes(storageRef, file);
-        imageUrl = await getDownloadURL(storageRef);
-      }
-
-      try {
-        await addDoc(collection(db, "menuItems"), {
-          th: th,
-          price: price,
-          category: category,
-          image: imageUrl
-        });
-        document.getElementById('menuTh').value = '';
-        document.getElementById('menuPrice').value = '';
-        fileInput.value = '';
-        loadMenus(); 
-      } catch (e) {
-        console.error(e);
-        alert("เกิดข้อผิดพลาด");
-      }
-    };
-
-    window.loadMenus = async function() {
-      const snapshot = await getDocs(collection(db, "menuItems"));
-      const listDiv = document.getElementById('menuList');
-      listDiv.innerHTML = '';
-      
-      if(snapshot.empty) {
-        listDiv.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">ยังไม่มีเมนูในระบบ</p>';
-        return;
-      }
-
-      snapshot.forEach(documentSnapshot => {
-        const item = documentSnapshot.data();
-        listDiv.innerHTML += `
-          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center transition-all hover:shadow-md">
-            <div class="flex gap-4 items-center">
-              ${item.image ? `<img src="${item.image}" class="w-14 h-14 rounded-xl object-cover border border-gray-100">` : `<div class="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center text-xl border border-gray-100">🍞</div>`}
-              <div>
-                <p class="font-medium text-[15px] text-[#2D4537]">${item.th}</p>
-                <p class="text-sm font-semibold text-[#E6A864] mt-0.5">${item.price} ฿</p>
-              </div>
+        <!-- Form -->
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-green-900/5 mb-8">
+            <h2 class="font-bold mb-4">เพิ่มเมนูใหม่</h2>
+            <div class="space-y-3">
+                <input type="text" id="name" placeholder="ชื่อเมนู" class="w-full p-3 border rounded-xl bg-[#FDFBF7]">
+                <select id="category" class="w-full p-3 border rounded-xl bg-[#FDFBF7]">
+                    <option value="แนะนำ">แนะนำ</option>
+                    <option value="ทานเล่น">ทานเล่น</option>
+                    <option value="อาหารจานหลัก">อาหารจานหลัก</option>
+                    <option value="เมนูเส้น">เมนูเส้น</option>
+                    <option value="เครื่องดื่ม">เครื่องดื่ม</option>
+                    <option value="ขนมปัง">ขนมปัง</option>
+                </select>
+                <input type="number" id="price" placeholder="ราคา (บาท)" class="w-full p-3 border rounded-xl bg-[#FDFBF7]">
+                <input type="text" id="imageUrl" placeholder="URL รูปภาพ (ถ้ามี)" class="w-full p-3 border rounded-xl bg-[#FDFBF7]">
+                <button onclick="saveItem()" class="w-full bg-[#2D4F3B] text-white py-3 rounded-xl font-bold shadow-lg shadow-green-900/20 active:scale-95 transition-transform">บันทึกเมนู</button>
             </div>
-            <button onclick="deleteMenu('${documentSnapshot.id}')" class="text-gray-300 hover:text-red-500 p-2 rounded-xl hover:bg-red-50 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-            </button>
-          </div>
-        `;
-      });
-    };
-
-    window.deleteMenu = async function(id) {
-      if(confirm("ต้องการลบเมนูนี้ใช่หรือไม่?")) {
-        await deleteDoc(doc(db, "menuItems", id));
-        loadMenus();
-      }
-    };
-
-    loadMenus();
-  </script>
-</body>
-=======
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bhajipang Admin</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 text-gray-800 font-sans pb-20">
-
-  <header class="bg-slate-800 text-white p-4 shadow-md sticky top-0 z-10">
-    <h1 class="text-xl font-bold">ระบบจัดการเมนูร้าน</h1>
-  </header>
-
-  <main class="p-4 max-w-md mx-auto">
-    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
-      <h2 class="font-bold text-lg mb-4 text-slate-800">เพิ่มเมนูใหม่</h2>
-      
-      <div class="space-y-3">
-        <div>
-          <label class="block text-sm font-medium mb-1">ชื่อเมนู (ภาษาไทย)</label>
-          <input type="text" id="menuTh" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-slate-500" placeholder="เช่น ข้าวผัดอเมริกัน">
         </div>
+
+        <h2 class="font-bold mb-4">รายการเมนูทั้งหมด</h2>
+        <div id="admin-list" class="space-y-3">
+            <!-- Items loaded via JS -->
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7w2MAQN9LRWivD8B7h0zPyqZhIyGFYJk",
+            authDomain: "bhajipang-366db.firebaseapp.com",
+            projectId: "bhajipang-366db",
+            storageBucket: "bhajipang-366db.firebasestorage.app",
+            messagingSenderId: "799553816032",
+            appId: "1:799553816032:web:12158ffda4f5826b3e1785",
+            measurementId: "G-P2EXTMKD1Y"
+        };
         
-        <div>
-          <label class="block text-sm font-medium mb-1">หมวดหมู่</label>
-          <select id="menuCategory" class="w-full border rounded-lg p-2 text-sm">
-            <option value="5">ทานเล่น</option>
-            <option value="6">เมนูอาหาร (จานหลัก)</option>
-            <option value="7">เมนูเส้น</option>
-            <option value="3">เครื่องดื่ม / สดชื่น</option>
-            <option value="4">ขนมปัง / โทสต์</option>
-          </select>
-        </div>
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = 'bhajipang-366db';
+        const menuRef = collection(db, 'artifacts', appId, 'public', 'data', 'menu');
 
-        <div class="flex gap-3">
-          <div class="flex-1">
-            <label class="block text-sm font-medium mb-1">ราคา (บาท)</label>
-            <input type="number" id="menuPrice" class="w-full border rounded-lg p-2 text-sm" placeholder="0">
-          </div>
-        </div>
+        // CRUD Operations
+        window.saveItem = async () => {
+            const name = document.getElementById('name').value;
+            const category = document.getElementById('category').value;
+            const price = document.getElementById('price').value;
+            const imageUrl = document.getElementById('imageUrl').value;
 
-        <div>
-          <label class="block text-sm font-medium mb-1">รูปภาพเมนู</label>
-          <input type="file" id="menuImage" accept="image/*" class="w-full text-sm border rounded-lg p-1">
-        </div>
+            if(!name || !price) return alert("กรุณากรอกชื่อและราคาให้ครบครับ");
 
-        <div class="flex items-center gap-2 mt-2">
-          <input type="checkbox" id="menuCustomizable" class="w-5 h-5 accent-slate-800">
-          <label class="text-sm font-medium">ลูกค้าเลือกระดับความหวาน / ใส่โน้ตได้</label>
-        </div>
+            await addDoc(menuRef, { name, category, price: Number(price), imageUrl });
+            alert("บันทึกสำเร็จ!");
+            document.getElementById('name').value = '';
+            document.getElementById('price').value = '';
+        };
 
-        <button onclick="addMenuItem()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-lg mt-4 shadow-sm hover:bg-slate-700">
-          บันทึกเมนูใหม่
-        </button>
-      </div>
-    </div>
+        window.deleteItem = async (id) => {
+            if(confirm('คุณต้องการลบเมนูนี้ใช่หรือไม่?')) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu', id));
+            }
+        };
 
-    <h2 class="font-bold text-lg mb-3 text-slate-800">เมนูในระบบ</h2>
-    <div id="menuList" class="space-y-3">
-      <p class="text-sm text-gray-500 text-center py-4">กำลังโหลดข้อมูล...</p>
-    </div>
-  </main>
-
-  <script type="module">
-    // 1. นำ firebaseConfig ที่ได้จากขั้นที่ 1 มาใส่ตรงนี้!
-    const firebaseConfig = {
-      apiKey: "AIzaSyD7w2MAQN9LRWivD8B7h0zPyqZhIyGFYJk",
-      authDomain: "bhajipang-366db.firebaseapp.com",
-      projectId: "bhajipang-366db",
-      storageBucket: "bhajipang-366db.firebasestorage.app",
-      messagingSenderId: "799553816032",
-      appId: "1:799553816032:web:12158ffda4f5826b3e1785",
-      measurementId: "G-P2EXTMKD1Y"
-    };
-
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-
-    // ฟังก์ชันเพิ่มเมนู
-    window.addMenuItem = async function() {
-      const th = document.getElementById('menuTh').value;
-      const price = Number(document.getElementById('menuPrice').value);
-      const category = Number(document.getElementById('menuCategory').value);
-      const isCustomizable = document.getElementById('menuCustomizable').checked;
-      const fileInput = document.getElementById('menuImage');
-      
-      if(!th || !price) { alert("กรุณาใส่ชื่อเมนูและราคาให้ครบ"); return; }
-      
-      let imageUrl = "";
-      if(fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const storageRef = ref(storage, `menu_images/${Date.now()}_${file.name}`);
-        await uploadBytes(storageRef, file);
-        imageUrl = await getDownloadURL(storageRef);
-      }
-
-      try {
-        await addDoc(collection(db, "menuItems"), {
-          th: th,
-          en: th, // ใช้ภาษาไทยแทนภาษาอังกฤษชั่วคราว
-          price: price,
-          category: category,
-          image: imageUrl,
-          isCustomizable: isCustomizable
+        // Listen for updates
+        signInAnonymously(auth).then(() => {
+            onSnapshot(menuRef, (snapshot) => {
+                const list = document.getElementById('admin-list');
+                list.innerHTML = '';
+                snapshot.docs.forEach(d => {
+                    const data = d.data();
+                    list.innerHTML += `
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-green-900/5 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-[#2D4F3B]">${data.name}</h4>
+                                <p class="text-xs opacity-60">${data.category} | ${data.price} ฿</p>
+                            </div>
+                            <button onclick="deleteItem('${d.id}')" class="text-red-500 font-bold px-3 py-1 rounded-lg">ลบ</button>
+                        </div>
+                    `;
+                });
+            });
         });
-        alert("เพิ่มเมนูสำเร็จ!");
-        document.getElementById('menuTh').value = '';
-        document.getElementById('menuPrice').value = '';
-        fileInput.value = '';
-        loadMenus(); // รีเฟรชรายการ
-      } catch (e) {
-        console.error(e);
-        alert("เกิดข้อผิดพลาด");
-      }
-    };
-
-    // ฟังก์ชันโหลดเมนูมาแสดงและปุ่มลบ
-    window.loadMenus = async function() {
-      const snapshot = await getDocs(collection(db, "menuItems"));
-      const listDiv = document.getElementById('menuList');
-      listDiv.innerHTML = '';
-      
-      if(snapshot.empty) {
-        listDiv.innerHTML = '<p class="text-sm text-gray-500 text-center">ยังไม่มีเมนู</p>';
-        return;
-      }
-
-      snapshot.forEach(documentSnapshot => {
-        const item = documentSnapshot.data();
-        listDiv.innerHTML += `
-          <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
-            <div class="flex gap-3 items-center">
-              ${item.image ? `<img src="${item.image}" class="w-12 h-12 rounded object-cover">` : `<div class="w-12 h-12 bg-gray-200 rounded"></div>`}
-              <div>
-                <p class="font-bold text-sm text-slate-800">${item.th}</p>
-                <p class="text-xs text-orange-600 font-medium">${item.price} ฿</p>
-              </div>
-            </div>
-            <button onclick="deleteMenu('${documentSnapshot.id}')" class="text-red-500 text-xs font-bold px-2 py-1 bg-red-50 rounded hover:bg-red-100">ลบ</button>
-          </div>
-        `;
-      });
-    };
-
-    window.deleteMenu = async function(id) {
-      if(confirm("ต้องการลบเมนูนี้ใช่หรือไม่?")) {
-        await deleteDoc(doc(db, "menuItems", id));
-        loadMenus();
-      }
-    };
-
-    // โหลดข้อมูลทันทีที่เปิดหน้า
-    loadMenus();
-  </script>
+    </script>
 </body>
 </html>
